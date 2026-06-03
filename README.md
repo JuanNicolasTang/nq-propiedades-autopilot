@@ -41,12 +41,16 @@ Copiar `.env.example` a `.env.local` y configurar cuando aplique:
 - `ADMIN_PASSWORD`: contrasena temporal para entrar a `/admin/login` y proteger
   las rutas internas `/admin/*`.
 
-## Supabase preparado
+## Supabase
 
 La ruta `POST /api/leads` valida datos basicos y calcula score. Si Supabase no
-esta configurado, responde en modo preview sin guardar datos. Cuando existan
-credenciales, espera una tabla `leads` compatible con los tipos en
-`src/types/database.ts`.
+esta configurado, responde en modo preview sin guardar datos.
+
+El CRM en `/admin/leads` lee leads reales desde `public.leads` usando
+`SUPABASE_SERVICE_ROLE_KEY` solo en server-side. Si no hay credenciales o no hay
+registros, muestra un estado informativo sin exponer datos.
+
+La tabla `leads` debe ser compatible con los tipos en `src/types/database.ts`.
 
 Campos esperados principales:
 
@@ -105,7 +109,9 @@ Santa Clara de las Villas, Pereira, Risaralda.
    abre con mensaje precargado.
 6. Abrir `/admin/leads` sin sesion y confirmar redireccion a `/admin/login`.
 7. Entrar con `ADMIN_PASSWORD`, revisar `/admin/leads` y cerrar sesion.
-8. Ejecutar `npm run lint` y `npm run build`.
+8. Confirmar que `/admin/leads` muestra leads reales de Supabase o el estado
+   vacio si no hay registros.
+9. Ejecutar `npm run lint` y `npm run build`.
 
 ## Pendiente para siguientes fases
 
