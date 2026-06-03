@@ -38,6 +38,8 @@ Copiar `.env.example` a `.env.local` y configurar cuando aplique:
 - `SUPABASE_SERVICE_ROLE_KEY`: llave server-side para insertar leads desde la
   ruta `/api/leads`.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: placeholder para futuras vistas autenticadas.
+- `ADMIN_PASSWORD`: contrasena temporal para entrar a `/admin/login` y proteger
+  las rutas internas `/admin/*`.
 
 ## Supabase preparado
 
@@ -67,7 +69,17 @@ Campos esperados principales:
 - `/`: home publica de NQ Propiedades.
 - `/propiedades/santa-clara-de-las-villas`: landing publica de la propiedad.
 - `/admin/leads`: estructura inicial del CRM.
+- `/admin/login`: acceso temporal al CRM usando `ADMIN_PASSWORD`.
 - `/api/leads`: endpoint preparado para captura de leads.
+
+## Acceso admin temporal
+
+Antes de deploy, configurar `ADMIN_PASSWORD` en `.env.local` y en el proveedor
+de hosting. Las rutas `/admin/*` redirigen a `/admin/login` si no existe una
+cookie de sesion valida. El boton "Cerrar sesion" elimina la cookie.
+
+Esta es una proteccion MVP para Fase 1. En una siguiente fase debe reemplazarse
+por Supabase Auth y politicas de acceso por usuario.
 
 ## Reglas de privacidad
 
@@ -91,8 +103,9 @@ Santa Clara de las Villas, Pereira, Risaralda.
 4. Enviar un lead valido y confirmar mensaje de exito.
 5. Configurar `NEXT_PUBLIC_WHATSAPP_NUMBER` y validar que el enlace de WhatsApp
    abre con mensaje precargado.
-6. Revisar `/admin/leads` y confirmar que no contiene datos sensibles reales.
-7. Ejecutar `npm run lint` y `npm run build`.
+6. Abrir `/admin/leads` sin sesion y confirmar redireccion a `/admin/login`.
+7. Entrar con `ADMIN_PASSWORD`, revisar `/admin/leads` y cerrar sesion.
+8. Ejecutar `npm run lint` y `npm run build`.
 
 ## Pendiente para siguientes fases
 
