@@ -1,4 +1,4 @@
-import { CalendarClock, Gauge, Inbox, ShieldAlert } from "lucide-react";
+import { CalendarClock, Gauge, Inbox, LogOut, ShieldCheck } from "lucide-react";
 import { demoLeads } from "@/lib/leads";
 import { featuredProperty } from "@/lib/properties";
 
@@ -24,11 +24,22 @@ export default function AdminLeadsPage() {
             persistencia real queda lista para Supabase cuando se configuren credenciales.
           </p>
         </div>
-        <div className="rounded-soft border border-ink/10 bg-white px-4 py-3">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-moss">
-            Propiedad activa
-          </p>
-          <p className="mt-1 text-sm font-semibold text-ink">{featuredProperty.title}</p>
+        <div className="flex flex-col gap-3 sm:flex-row lg:items-center">
+          <div className="rounded-soft border border-ink/10 bg-white px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-moss">
+              Propiedad activa
+            </p>
+            <p className="mt-1 text-sm font-semibold text-ink">{featuredProperty.title}</p>
+          </div>
+          <form action="/api/admin/logout" method="post">
+            <button
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-soft border border-ink/15 bg-white px-4 py-3 text-sm font-semibold text-ink transition hover:-translate-y-0.5 hover:bg-paper focus:outline-none focus:ring-2 focus:ring-night focus:ring-offset-2"
+              type="submit"
+            >
+              <LogOut aria-hidden="true" size={18} />
+              Cerrar sesion
+            </button>
+          </form>
         </div>
       </div>
 
@@ -48,10 +59,10 @@ export default function AdminLeadsPage() {
 
       <section className="rounded-soft border border-ink/10 bg-white">
         <div className="flex items-start gap-3 border-b border-ink/10 bg-paper p-4">
-          <ShieldAlert aria-hidden="true" className="mt-0.5 shrink-0 text-clay" size={20} />
+          <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0 text-jade" size={20} />
           <p className="text-sm leading-6 text-ink/72">
-            Fase 1 no incluye autenticacion. Usa esta vista solo como estructura inicial y
-            no guardes informacion sensible hasta activar Supabase Auth y reglas de acceso.
+            Acceso protegido temporalmente con ADMIN_PASSWORD. Mantener como MVP hasta
+            activar Supabase Auth y reglas de acceso por usuario.
           </p>
         </div>
 
