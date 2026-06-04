@@ -4,7 +4,11 @@ import type { Database } from "@/types/database";
 export type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 export type LeadEventRow = Database["public"]["Tables"]["lead_events"]["Row"];
 export type ShowingRow = Database["public"]["Tables"]["showings"]["Row"];
+export type OfferRow = Database["public"]["Tables"]["offers"]["Row"];
 export type ShowingWithLead = ShowingRow & {
+  leads: Pick<LeadRow, "full_name" | "phone" | "email"> | null;
+};
+export type OfferWithLead = OfferRow & {
   leads: Pick<LeadRow, "full_name" | "phone" | "email"> | null;
 };
 
@@ -20,6 +24,14 @@ export function formatDate(value: string) {
     timeStyle: "short",
     timeZone: "America/Bogota",
   }).format(new Date(value));
+}
+
+export function formatCopAmount(value: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 export function propertyLabel(slug: string) {
@@ -55,6 +67,27 @@ export function showingWhatsappUrl(
   if (!phone) return null;
 
   const message = `Hola ${lead.full_name}, soy de NQ Propiedades. Te escribo para confirmar tu visita a ${propertyLabel(showing.property_slug)} el ${formatDate(showing.scheduled_at)}.`;
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+}
+
+export function offerStatusLabel(status: string) {
+  return status.replaceAll("_", " ");
+}
+
+export function paymentMethodLabel(method: string | null) {
+  return method ? method.replaceAll("_", " ") : "No definido";
+}
+
+export function offerWhatsappUrl(
+  offer: Pick<OfferRow, "amount" | "property_slug">,
+  lead: Pick<LeadRow, "full_name" | "phone">,
+) {
+  const phone = normalizeWhatsappPhone(lead.phone);
+
+  if (!phone) return null;
+
+  const message = `Hola ${lead.full_name}, soy de NQ Propiedades. Te escribo para hacer seguimiento a tu oferta por ${propertyLabel(offer.property_slug)} por ${formatCopAmount(offer.amount)}.`;
 
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }

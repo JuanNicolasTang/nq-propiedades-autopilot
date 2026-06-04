@@ -27,6 +27,12 @@ export function SiteHeader() {
           >
             Visitas
           </Link>
+          <Link
+            className="rounded-soft px-3 py-2 transition hover:bg-ink/8 hover:text-ink"
+            href="/admin/ofertas"
+          >
+            Ofertas
+          </Link>
         </nav>
       </div>
     </header>

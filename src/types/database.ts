@@ -1,4 +1,5 @@
 import type { LeadStatus } from "./leads";
+import type { OfferStatus, PaymentMethod } from "./offers";
 import type { ShowingStatus } from "./showings";
 
 export type Database = {
@@ -76,6 +77,30 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["showings"]["Insert"]>;
+      };
+      offers: {
+        Row: {
+          id: string;
+          lead_id: string;
+          property_slug: string;
+          amount: number;
+          payment_method: PaymentMethod | null;
+          conditions: string | null;
+          status: OfferStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          lead_id: string;
+          property_slug: string;
+          amount: number;
+          payment_method?: PaymentMethod | null;
+          conditions?: string | null;
+          status?: OfferStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["offers"]["Insert"]>;
       };
     };
   };
