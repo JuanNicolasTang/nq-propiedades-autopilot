@@ -3,6 +3,10 @@ import type { Database } from "@/types/database";
 
 export type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 export type LeadEventRow = Database["public"]["Tables"]["lead_events"]["Row"];
+export type ShowingRow = Database["public"]["Tables"]["showings"]["Row"];
+export type ShowingWithLead = ShowingRow & {
+  leads: Pick<LeadRow, "full_name" | "phone" | "email"> | null;
+};
 
 export function scoreBadge(score: number) {
   if (score >= 80) return "bg-clay text-white";
@@ -38,6 +42,19 @@ export function leadWhatsappUrl(lead: Pick<LeadRow, "full_name" | "phone" | "pro
   if (!phone) return null;
 
   const message = `Hola ${lead.full_name}, soy de NQ Propiedades. Te contacto por tu solicitud sobre ${propertyLabel(lead.property_slug)}.`;
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+}
+
+export function showingWhatsappUrl(
+  showing: Pick<ShowingRow, "scheduled_at" | "property_slug">,
+  lead: Pick<LeadRow, "full_name" | "phone">,
+) {
+  const phone = normalizeWhatsappPhone(lead.phone);
+
+  if (!phone) return null;
+
+  const message = `Hola ${lead.full_name}, soy de NQ Propiedades. Te escribo para confirmar tu visita a ${propertyLabel(showing.property_slug)} el ${formatDate(showing.scheduled_at)}.`;
 
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }

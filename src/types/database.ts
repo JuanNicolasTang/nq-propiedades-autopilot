@@ -1,4 +1,5 @@
 import type { LeadStatus } from "./leads";
+import type { ShowingStatus } from "./showings";
 
 export type Database = {
   public: {
@@ -53,6 +54,28 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["lead_events"]["Insert"]>;
+      };
+      showings: {
+        Row: {
+          id: string;
+          lead_id: string;
+          property_slug: string;
+          scheduled_at: string;
+          status: ShowingStatus;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          lead_id: string;
+          property_slug: string;
+          scheduled_at: string;
+          status?: ShowingStatus;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["showings"]["Insert"]>;
       };
     };
   };

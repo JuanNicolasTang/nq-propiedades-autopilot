@@ -9,6 +9,7 @@ import {
   MessageCircle,
   NotebookPen,
   ShieldCheck,
+  UserRoundCheck,
 } from "lucide-react";
 import {
   formatDate,
@@ -16,11 +17,14 @@ import {
   propertyLabel,
   readableBoolean,
   scoreBadge,
+  showingWhatsappUrl,
   type LeadEventRow,
   type LeadRow,
+  type ShowingRow,
 } from "@/lib/crm";
 import { createServerSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { leadStatuses, type LeadStatus } from "@/types/leads";
+import { showingStatuses, type ShowingStatus } from "@/types/showings";
 
 type LeadDetailPageProps = {
   params: Promise<{
@@ -39,13 +43,31 @@ function isLeadStatus(value: string): value is LeadStatus {
   return leadStatuses.includes(value as LeadStatus);
 }
 
+function isShowingStatus(value: string): value is ShowingStatus {
+  return showingStatuses.includes(value as ShowingStatus);
+}
+
+function parseScheduledAt(value: string) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toISOString();
+}
+
 async function getLeadDetail(id: string) {
   if (!isSupabaseConfigured()) {
     return {
       lead: null,
       events: [] as LeadEventRow[],
+      showings: [] as ShowingRow[],
       error: "Configura SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY para operar el CRM.",
       eventsError: null,
+      showingsError: null,
     };
   }
 
@@ -62,8 +84,10 @@ async function getLeadDetail(id: string) {
     return {
       lead: null,
       events: [] as LeadEventRow[],
+      showings: [] as ShowingRow[],
       error: "No se pudo cargar el lead desde Supabase.",
       eventsError: null,
+      showingsError: null,
     };
   }
 
@@ -71,23 +95,36 @@ async function getLeadDetail(id: string) {
     return {
       lead: null,
       events: [] as LeadEventRow[],
+      showings: [] as ShowingRow[],
       error: null,
       eventsError: null,
+      showingsError: null,
     };
   }
 
-  const { data: events, error: eventsError } = await supabase!
+  const [eventsResponse, showingsResponse] = await Promise.all([
+    supabase!
     .from("lead_events")
     .select("id,lead_id,event_type,note,created_at")
     .eq("lead_id", id)
-    .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }),
+    supabase!
+      .from("showings")
+      .select("id,lead_id,property_slug,scheduled_at,status,notes,created_at,updated_at")
+      .eq("lead_id", id)
+      .order("scheduled_at", { ascending: false }),
+  ]);
 
   return {
     lead: lead as LeadRow,
-    events: (events ?? []) as LeadEventRow[],
+    events: (eventsResponse.data ?? []) as LeadEventRow[],
+    showings: (showingsResponse.data ?? []) as ShowingRow[],
     error: null,
-    eventsError: eventsError
+    eventsError: eventsResponse.error
       ? "No se pudo cargar el timeline. Revisa que la tabla lead_events exista."
+      : null,
+    showingsError: showingsResponse.error
+      ? "No se pudieron cargar las visitas. Revisa que la tabla showings exista."
       : null,
   };
 }
@@ -154,6 +191,85 @@ async function addLeadNote(formData: FormData) {
   revalidatePath(`/admin/leads/${leadId}`);
 }
 
+async function scheduleShowing(formData: FormData) {
+  "use server";
+
+  const leadId = cleanText(formData.get("leadId"));
+  const propertySlug = cleanText(formData.get("propertySlug"));
+  const scheduledAt = parseScheduledAt(cleanText(formData.get("scheduledAt")));
+  const notes = cleanText(formData.get("notes"));
+
+  if (!leadId || !propertySlug || !scheduledAt) {
+    return;
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  if (!supabase) {
+    throw new Error("Supabase no esta configurado.");
+  }
+
+  const { error } = await supabase.from("showings").insert({
+    lead_id: leadId,
+    property_slug: propertySlug,
+    scheduled_at: scheduledAt,
+    status: "programada",
+    notes: notes || null,
+  });
+
+  if (error) {
+    throw new Error("No se pudo agendar la visita.");
+  }
+
+  await Promise.all([
+    supabase.from("leads").update({ status: "visita_agendada" }).eq("id", leadId),
+    supabase.from("lead_events").insert({
+      lead_id: leadId,
+      event_type: "showing_scheduled",
+      note: `Visita agendada para ${formatDate(scheduledAt)}.${notes ? ` Nota: ${notes}` : ""}`,
+    }),
+  ]);
+
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/visitas");
+  revalidatePath(`/admin/leads/${leadId}`);
+}
+
+async function updateShowingStatus(formData: FormData) {
+  "use server";
+
+  const leadId = cleanText(formData.get("leadId"));
+  const showingId = cleanText(formData.get("showingId"));
+  const status = cleanText(formData.get("status"));
+  const currentStatus = cleanText(formData.get("currentStatus"));
+  const scheduledAt = cleanText(formData.get("scheduledAt"));
+
+  if (!leadId || !showingId || !isShowingStatus(status) || status === currentStatus) {
+    return;
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  if (!supabase) {
+    throw new Error("Supabase no esta configurado.");
+  }
+
+  const { error } = await supabase.from("showings").update({ status }).eq("id", showingId);
+
+  if (error) {
+    throw new Error("No se pudo actualizar la visita.");
+  }
+
+  await supabase.from("lead_events").insert({
+    lead_id: leadId,
+    event_type: "showing_status_changed",
+    note: `Visita ${scheduledAt ? `del ${formatDate(scheduledAt)} ` : ""}actualizada de ${currentStatus || "sin estado"} a ${status}.`,
+  });
+
+  revalidatePath("/admin/visitas");
+  revalidatePath(`/admin/leads/${leadId}`);
+}
+
 function DetailItem({
   label,
   value,
@@ -171,7 +287,7 @@ function DetailItem({
 
 export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
   const { id } = await params;
-  const { lead, events, error, eventsError } = await getLeadDetail(id);
+  const { lead, events, showings, error, eventsError, showingsError } = await getLeadDetail(id);
 
   if (!lead && !error) {
     notFound();
@@ -273,6 +389,46 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
           <aside className="space-y-5">
             <section className="rounded-soft border border-ink/10 bg-white p-5">
               <div className="flex items-start gap-3">
+                <UserRoundCheck aria-hidden="true" className="mt-0.5 shrink-0 text-jade" size={20} />
+                <div>
+                  <h2 className="font-semibold text-ink">Agendar visita</h2>
+                  <p className="mt-1 text-sm leading-6 text-ink/68">
+                    Crea una cita manual para este lead y registra el evento en el timeline.
+                  </p>
+                </div>
+              </div>
+              <form action={scheduleShowing} className="mt-5 grid gap-3">
+                <input name="leadId" type="hidden" value={lead.id} />
+                <input name="propertySlug" type="hidden" value={lead.property_slug} />
+                <label className="grid gap-2 text-sm font-semibold text-ink">
+                  Fecha y hora
+                  <input
+                    className="min-h-12 rounded-soft border border-ink/15 bg-paper/60 px-3 text-base font-normal outline-none transition focus:border-jade focus:ring-2 focus:ring-jade/20"
+                    name="scheduledAt"
+                    type="datetime-local"
+                    required
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-ink">
+                  Nota opcional
+                  <textarea
+                    className="min-h-24 rounded-soft border border-ink/15 bg-paper/60 px-3 py-3 text-base font-normal outline-none transition focus:border-jade focus:ring-2 focus:ring-jade/20"
+                    name="notes"
+                    placeholder="Ej. Confirmar disponibilidad del comprador y punto de encuentro."
+                  />
+                </label>
+                <button
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-soft bg-night px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-ink"
+                  type="submit"
+                >
+                  <CalendarClock aria-hidden="true" size={18} />
+                  Agendar visita
+                </button>
+              </form>
+            </section>
+
+            <section className="rounded-soft border border-ink/10 bg-white p-5">
+              <div className="flex items-start gap-3">
                 <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0 text-jade" size={20} />
                 <div>
                   <h2 className="font-semibold text-ink">Cambiar estado</h2>
@@ -340,6 +496,95 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
             </section>
           </aside>
         </div>
+      )}
+
+      {lead && (
+        <section className="mb-8 rounded-soft border border-ink/10 bg-white">
+          <div className="flex items-start gap-3 border-b border-ink/10 bg-paper p-4">
+            <UserRoundCheck aria-hidden="true" className="mt-0.5 shrink-0 text-jade" size={20} />
+            <div>
+              <h2 className="font-semibold text-ink">Visitas del lead</h2>
+              <p className="mt-1 text-sm leading-6 text-ink/68">
+                Citas de venta asociadas a este lead. WhatsApp se abre solo por accion manual.
+              </p>
+            </div>
+          </div>
+
+          {showingsError && (
+            <div className="border-b border-ink/10 bg-red-50 p-4 text-sm font-semibold text-red-700">
+              {showingsError}
+            </div>
+          )}
+
+          {showings.length === 0 ? (
+            <div className="p-6 text-sm leading-6 text-ink/68">
+              Todavia no hay visitas agendadas para este lead.
+            </div>
+          ) : (
+            <div className="grid gap-3 p-4">
+              {showings.map((showing) => {
+                const showingWhatsAppUrl = showingWhatsappUrl(showing, lead);
+
+                return (
+                  <article
+                    className="grid gap-4 rounded-soft border border-ink/10 bg-paper p-4 lg:grid-cols-[1fr_16rem]"
+                    key={showing.id}
+                  >
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-moss">
+                        {showing.status}
+                      </p>
+                      <h3 className="mt-2 text-lg font-semibold text-ink">
+                        {formatDate(showing.scheduled_at)}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-ink/68">
+                        {showing.notes || "Sin notas de visita"}
+                      </p>
+                      {showingWhatsAppUrl && (
+                        <a
+                          className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-soft bg-jade px-3 py-2 text-sm font-semibold text-white transition hover:bg-moss"
+                          href={showingWhatsAppUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <MessageCircle aria-hidden="true" size={16} />
+                          Confirmar por WhatsApp
+                        </a>
+                      )}
+                    </div>
+                    <form action={updateShowingStatus} className="grid content-start gap-3">
+                      <input name="leadId" type="hidden" value={lead.id} />
+                      <input name="showingId" type="hidden" value={showing.id} />
+                      <input name="currentStatus" type="hidden" value={showing.status} />
+                      <input name="scheduledAt" type="hidden" value={showing.scheduled_at} />
+                      <label className="grid gap-2 text-sm font-semibold text-ink">
+                        Estado visita
+                        <select
+                          className="min-h-11 rounded-soft border border-ink/15 bg-white px-3 text-base font-normal outline-none transition focus:border-jade focus:ring-2 focus:ring-jade/20"
+                          name="status"
+                          defaultValue={showing.status}
+                        >
+                          {showingStatuses.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-soft bg-night px-4 py-2 text-sm font-semibold text-white transition hover:bg-ink"
+                        type="submit"
+                      >
+                        <CheckCircle2 aria-hidden="true" size={16} />
+                        Actualizar visita
+                      </button>
+                    </form>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
       )}
 
       {lead && (
