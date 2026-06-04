@@ -51,6 +51,10 @@ El CRM en `/admin/leads` lee leads reales desde `public.leads` usando
 registros, muestra un estado informativo sin exponer datos.
 
 La tabla `leads` debe ser compatible con los tipos en `src/types/database.ts`.
+Para el timeline del CRM, aplicar la migracion
+`supabase/migrations/20260603235000_create_lead_events.sql`, que crea
+`public.lead_events` con RLS habilitado y sin politicas publicas. La app la usa
+solo desde server-side con `SUPABASE_SERVICE_ROLE_KEY`.
 
 Campos esperados principales:
 
@@ -68,11 +72,21 @@ Campos esperados principales:
 - `source`
 - `consent`
 
+Tabla `lead_events`:
+
+- `id`
+- `lead_id`
+- `event_type`
+- `note`
+- `created_at`
+
 ## Rutas
 
 - `/`: home publica de NQ Propiedades.
 - `/propiedades/santa-clara-de-las-villas`: landing publica de la propiedad.
 - `/admin/leads`: estructura inicial del CRM.
+- `/admin/leads/[id]`: detalle operativo del lead con cambio de estado, notas
+  internas, timeline y enlace manual de WhatsApp.
 - `/admin/login`: acceso temporal al CRM usando `ADMIN_PASSWORD`.
 - `/api/leads`: endpoint preparado para captura de leads.
 
@@ -111,7 +125,9 @@ Santa Clara de las Villas, Pereira, Risaralda.
 7. Entrar con `ADMIN_PASSWORD`, revisar `/admin/leads` y cerrar sesion.
 8. Confirmar que `/admin/leads` muestra leads reales de Supabase o el estado
    vacio si no hay registros.
-9. Ejecutar `npm run lint` y `npm run build`.
+9. Abrir un lead en `/admin/leads/[id]`, cambiar estado y agregar una nota.
+10. Confirmar que el timeline muestra los eventos nuevos.
+11. Ejecutar `npm run lint` y `npm run build`.
 
 ## Pendiente para siguientes fases
 

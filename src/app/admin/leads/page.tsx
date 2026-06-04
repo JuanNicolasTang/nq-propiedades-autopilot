@@ -1,50 +1,17 @@
+import Link from "next/link";
 import { CalendarClock, Gauge, Inbox, LogOut, MessageCircle, ShieldCheck } from "lucide-react";
+import {
+  formatDate,
+  leadWhatsappUrl,
+  propertyLabel,
+  scoreBadge,
+  type LeadRow,
+} from "@/lib/crm";
 import { createServerSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { featuredProperty, getPropertyBySlug } from "@/lib/properties";
-import type { Database } from "@/types/database";
-
-type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
+import { featuredProperty } from "@/lib/properties";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-function scoreBadge(score: number) {
-  if (score >= 80) return "bg-clay text-white";
-  if (score >= 50) return "bg-pollen text-ink";
-  return "bg-cloud text-ink";
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("es-CO", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "America/Bogota",
-  }).format(new Date(value));
-}
-
-function propertyLabel(slug: string) {
-  return getPropertyBySlug(slug)?.shortTitle ?? slug;
-}
-
-function normalizeWhatsappPhone(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-
-  if (digits.length === 10 && digits.startsWith("3")) {
-    return `57${digits}`;
-  }
-
-  return digits;
-}
-
-function leadWhatsappUrl(lead: LeadRow) {
-  const phone = normalizeWhatsappPhone(lead.phone);
-
-  if (!phone) return null;
-
-  const message = `Hola ${lead.full_name}, soy de NQ Propiedades. Te contacto por tu solicitud sobre ${propertyLabel(lead.property_slug)}.`;
-
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-}
 
 async function getLeads() {
   if (!isSupabaseConfigured()) {
@@ -177,9 +144,15 @@ export default async function AdminLeadsPage() {
               <div className="mt-4 grid gap-2 text-sm text-ink/72">
                 <p>Estado: {lead.status}</p>
                       <p>Propiedad: {propertyLabel(lead.property_slug)}</p>
-                <p>Origen: {lead.source}</p>
+                        <p>Origen: {lead.source}</p>
                       <p>Fecha: {formatDate(lead.created_at)}</p>
                 <p>{lead.message}</p>
+                      <Link
+                        className="mt-2 inline-flex min-h-10 items-center justify-center rounded-soft border border-ink/15 bg-white px-3 py-2 text-sm font-semibold text-ink transition hover:bg-cloud"
+                        href={`/admin/leads/${lead.id}`}
+                      >
+                        Ver detalle
+                      </Link>
                       {whatsappUrl ? (
                         <a
                           className="mt-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-soft bg-jade px-3 py-2 text-sm font-semibold text-white transition hover:bg-moss"
@@ -212,6 +185,7 @@ export default async function AdminLeadsPage() {
                     <th className="px-4 py-4">Fuente</th>
                     <th className="px-4 py-4">Fecha</th>
                     <th className="px-4 py-4">Mensaje</th>
+                    <th className="px-4 py-4">Detalle</th>
                     <th className="px-4 py-4">WhatsApp</th>
               </tr>
             </thead>
@@ -239,6 +213,14 @@ export default async function AdminLeadsPage() {
                         <td className="px-4 py-4 text-ink/68">{formatDate(lead.created_at)}</td>
                         <td className="max-w-xs px-4 py-4 text-ink/68">
                           {lead.message || "Sin mensaje"}
+                        </td>
+                        <td className="px-4 py-4">
+                          <Link
+                            className="inline-flex min-h-10 items-center justify-center rounded-soft border border-ink/15 bg-white px-3 py-2 text-xs font-semibold text-ink transition hover:bg-cloud"
+                            href={`/admin/leads/${lead.id}`}
+                          >
+                            Ver detalle
+                          </Link>
                         </td>
                         <td className="px-4 py-4">
                           {whatsappUrl ? (

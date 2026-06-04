@@ -38,6 +38,22 @@ export type Database = {
         };
         Update: Partial<Database["public"]["Tables"]["leads"]["Insert"]>;
       };
+      lead_events: {
+        Row: {
+          id: string;
+          lead_id: string;
+          event_type: string;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          lead_id: string;
+          event_type: string;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_events"]["Insert"]>;
+      };
     };
   };
 };
