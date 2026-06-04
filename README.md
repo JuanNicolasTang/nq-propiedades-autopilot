@@ -50,6 +50,12 @@ El CRM en `/admin/leads` lee leads reales desde `public.leads` usando
 `SUPABASE_SERVICE_ROLE_KEY` solo en server-side. Si no hay credenciales o no hay
 registros, muestra un estado informativo sin exponer datos.
 
+El dashboard en `/admin` lee metricas reales desde `public.leads`,
+`public.showings` y `public.offers` usando `SUPABASE_SERVICE_ROLE_KEY` solo en
+server-side. Muestra totales, conversiones, agrupaciones por estado/fuente,
+proximas visitas y ultimos leads. Es una vista interna de solo lectura y no
+automatiza mensajes.
+
 La tabla `leads` debe ser compatible con los tipos en `src/types/database.ts`.
 Para el timeline del CRM, aplicar la migracion
 `supabase/migrations/20260603235000_create_lead_events.sql`, que crea
@@ -142,6 +148,7 @@ Metodos de pago permitidos:
 
 - `/`: home publica de NQ Propiedades.
 - `/propiedades/santa-clara-de-las-villas`: landing publica de la propiedad.
+- `/admin`: dashboard protegido con metricas de embudo comercial.
 - `/admin/leads`: estructura inicial del CRM.
 - `/admin/leads/[id]`: detalle operativo del lead con cambio de estado, notas
   internas, timeline y enlace manual de WhatsApp.
@@ -196,7 +203,9 @@ Santa Clara de las Villas, Pereira, Risaralda.
 16. Cambiar el estado de la oferta y confirmar que el timeline registra el cambio.
 17. Validar que no se muestran valores privados de negociacion.
 18. Validar que los botones de WhatsApp solo abren mensajes manuales precargados.
-19. Ejecutar `npm run lint` y `npm run build`.
+19. Abrir `/admin` y confirmar metricas de leads, visitas, ofertas, conversiones,
+    proximas visitas y ultimos leads.
+20. Ejecutar `npm run lint` y `npm run build`.
 
 ## Pendiente para siguientes fases
 
