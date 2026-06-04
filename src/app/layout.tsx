@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
+import { siteConfig } from "@/lib/seo";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -15,9 +16,29 @@ const body = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "NQ Propiedades Autopilot",
-  description:
-    "Web publica, landing de propiedades y CRM inicial para NQ Propiedades en Pereira.",
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: "NQ Propiedades | Casas en Pereira",
+    template: "%s | NQ Propiedades",
+  },
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  alternates: {
+    canonical: siteConfig.url,
+  },
+  openGraph: {
+    title: "NQ Propiedades | Casas en Pereira",
+    description: siteConfig.description,
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    locale: "es_CO",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "NQ Propiedades | Casas en Pereira",
+    description: siteConfig.description,
+  },
 };
 
 export default function RootLayout({

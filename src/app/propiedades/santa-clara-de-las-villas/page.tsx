@@ -1,19 +1,78 @@
 import type { Metadata } from "next";
 import { ArrowLeft, Dumbbell, Home, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { FaqSection, type FaqItem } from "@/components/FaqSection";
+import { InternalLinks } from "@/components/InternalLinks";
 import { LeadForm } from "@/components/LeadForm";
 import { PropertyVisual } from "@/components/PropertyVisual";
+import { SeoJsonLd } from "@/components/SeoJsonLd";
 import { WhatsAppButton, WhatsAppFallbackNote } from "@/components/WhatsAppButton";
 import { featuredProperty, formatCop } from "@/lib/properties";
+import { absoluteUrl, createPageMetadata, faqJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: `${featuredProperty.title} | NQ Propiedades`,
+export const metadata: Metadata = createPageMetadata({
+  title: `${featuredProperty.title} en Pereira`,
   description: featuredProperty.seoDescription,
+  path: "/propiedades/santa-clara-de-las-villas",
+});
+
+const propertyFaqs: FaqItem[] = [
+  {
+    question: "Donde esta ubicada publicamente la casa?",
+    answer:
+      "La ubicacion publica permitida es Santa Clara de las Villas, Pereira, Risaralda. Por privacidad no se publica direccion exacta ni coordenadas.",
+  },
+  {
+    question: "Que datos de la propiedad se pueden consultar en esta pagina?",
+    answer:
+      "Se muestra informacion comercial permitida: tipo de casa, area aproximada, estrato, zonas sociales, ubicacion aproximada y precio inicial sugerido.",
+  },
+  {
+    question: "Como puedo pedir mas informacion?",
+    answer:
+      "Puedes dejar tus datos en el formulario o abrir WhatsApp manualmente. El contacto debe ser iniciado por una persona interesada.",
+  },
+  {
+    question: "El precio publicado es el precio minimo aceptado?",
+    answer:
+      "No. El valor publicado es una referencia comercial inicial para compradores interesados; no se publica precio minimo aceptado.",
+  },
+];
+
+const propertyJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SingleFamilyResidence",
+  name: featuredProperty.title,
+  description: featuredProperty.seoDescription,
+  url: absoluteUrl("/propiedades/santa-clara-de-las-villas"),
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Pereira",
+    addressRegion: "Risaralda",
+    addressCountry: "CO",
+  },
+  floorSize: {
+    "@type": "QuantitativeValue",
+    value: featuredProperty.areaM2,
+    unitCode: "MTK",
+  },
+  amenityFeature: featuredProperty.amenities.map((amenity) => ({
+    "@type": "LocationFeatureSpecification",
+    name: amenity,
+  })),
+  offers: {
+    "@type": "Offer",
+    price: featuredProperty.priceCop,
+    priceCurrency: "COP",
+    availability: "https://schema.org/InStock",
+    url: absoluteUrl("/propiedades/santa-clara-de-las-villas"),
+  },
 };
 
 export default function SantaClaraPropertyPage() {
   return (
     <main>
+      <SeoJsonLd data={[propertyJsonLd, faqJsonLd(propertyFaqs)]} />
       <section className="mx-auto grid max-w-6xl gap-8 px-4 pb-12 pt-6 sm:px-6 lg:grid-cols-[0.98fr_1.02fr] lg:items-center lg:pb-16 lg:pt-10">
         <div>
           <Link
@@ -115,6 +174,32 @@ export default function SantaClaraPropertyPage() {
 
         <LeadForm propertySlug={featuredProperty.slug} propertyTitle={featuredProperty.title} />
       </section>
+
+      <FaqSection
+        faqs={propertyFaqs}
+        title="Respuestas claras antes de solicitar informacion"
+      />
+
+      <InternalLinks
+        links={[
+          {
+            href: "/zonas/santa-clara-de-las-villas-pereira",
+            label: "Zona Santa Clara",
+            description: "Contexto local del sector usando solo ubicacion aproximada.",
+          },
+          {
+            href: "/zonas/pereira",
+            label: "Pereira",
+            description: "Guia de ciudad para orientar una busqueda residencial.",
+          },
+          {
+            href: "/guias/comprar-casa-en-conjunto-cerrado-pereira",
+            label: "Conjunto cerrado",
+            description: "Preguntas clave antes de comprar una casa en conjunto cerrado.",
+          },
+        ]}
+        title="Mas contexto para comparar antes de visitar"
+      />
     </main>
   );
 }

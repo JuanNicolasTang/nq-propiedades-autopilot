@@ -11,6 +11,7 @@ leads, preparacion de Supabase y estructura inicial de CRM.
 - Tailwind CSS
 - Supabase preparado para persistencia futura de leads
 - WhatsApp deep link con mensaje precargado
+- Base SEO/GEO/AEO con sitemap, robots, metadata, canonical y JSON-LD seguro
 
 ## Ejecutar localmente
 
@@ -34,6 +35,9 @@ Copiar `.env.example` a `.env.local` y configurar cuando aplique:
 
 - `NEXT_PUBLIC_WHATSAPP_NUMBER`: numero de WhatsApp en formato internacional sin
   `+`. Si esta vacio, el boton dirige al formulario.
+- `NEXT_PUBLIC_SITE_URL`: URL publica del sitio para canonical URLs, sitemap,
+  robots, Open Graph y Twitter cards. Si esta vacio, usa `http://localhost:3000`
+  para desarrollo local.
 - `SUPABASE_URL`: URL del proyecto Supabase.
 - `SUPABASE_SERVICE_ROLE_KEY`: llave server-side para insertar leads desde la
   ruta `/api/leads`.
@@ -148,6 +152,14 @@ Metodos de pago permitidos:
 
 - `/`: home publica de NQ Propiedades.
 - `/propiedades/santa-clara-de-las-villas`: landing publica de la propiedad.
+- `/zonas/pereira`: guia GEO local para busquedas residenciales en Pereira.
+- `/zonas/santa-clara-de-las-villas-pereira`: guia GEO del sector de la
+  propiedad destacada con ubicacion aproximada.
+- `/zonas/villa-olimpica-pereira`: guia GEO de referencia local para busquedas
+  en Pereira.
+- `/guias/comprar-casa-en-pereira`: guia AEO/FAQ para compradores de casa.
+- `/guias/comprar-casa-en-conjunto-cerrado-pereira`: guia AEO/FAQ para casas en
+  conjunto cerrado.
 - `/admin`: dashboard protegido con metricas de embudo comercial.
 - `/admin/leads`: estructura inicial del CRM.
 - `/admin/leads/[id]`: detalle operativo del lead con cambio de estado, notas
@@ -158,6 +170,46 @@ Metodos de pago permitidos:
   condiciones, metodo de pago y WhatsApp manual.
 - `/admin/login`: acceso temporal al CRM usando `ADMIN_PASSWORD`.
 - `/api/leads`: endpoint preparado para captura de leads.
+- `/sitemap.xml`: sitemap publico generado por Next.js.
+- `/robots.txt`: reglas publicas que permiten paginas comerciales y bloquean
+  `/admin` y `/api`.
+
+## SEO, GEO y AEO
+
+La base SEO incluye metadata global, canonical URLs, Open Graph, Twitter cards,
+`robots.ts`, `sitemap.ts` y JSON-LD seguro para la home, la landing de propiedad
+y las guias FAQ. Las paginas GEO y AEO son contenido manual, no plantillas
+programaticas masivas.
+
+Componentes reutilizables:
+
+- `SeoJsonLd`: renderiza JSON-LD escapado.
+- `InternalLinks`: crea enlaces internos editoriales.
+- `FaqSection`: muestra preguntas y respuestas claras.
+- `src/lib/seo.ts`: centraliza URL base, metadata, canonical, sitemap y schemas.
+
+Checklist de privacidad SEO:
+
+- No publicar direccion exacta.
+- No publicar coordenadas exactas.
+- No publicar matricula inmobiliaria.
+- No publicar ficha catastral.
+- No publicar propietarios, firmas ni documentos legales.
+- No publicar avaluo completo.
+- No publicar precio minimo aceptado.
+- No inventar datos de mercado ni prometer valorizacion.
+- No generar paginas duplicadas o spam programatico.
+
+Para validar sitemap y robots en local:
+
+```bash
+npm run dev
+```
+
+Abrir:
+
+- `http://localhost:3000/sitemap.xml`
+- `http://localhost:3000/robots.txt`
 
 ## Acceso admin temporal
 
