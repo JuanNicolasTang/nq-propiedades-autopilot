@@ -1,12 +1,24 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, MapPin, ShieldCheck } from "lucide-react";
+import { InternalLinks } from "@/components/InternalLinks";
 import { PropertyVisual } from "@/components/PropertyVisual";
+import { SeoJsonLd } from "@/components/SeoJsonLd";
 import { WhatsAppButton, WhatsAppFallbackNote } from "@/components/WhatsAppButton";
 import { featuredProperty, formatCop } from "@/lib/properties";
+import { createPageMetadata, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
+
+export const metadata: Metadata = createPageMetadata({
+  title: "NQ Propiedades | Casas en Pereira",
+  description:
+    "Encuentra propiedades en Pereira con informacion clara, ubicacion aproximada y contacto iniciado por compradores reales.",
+  path: "/",
+});
 
 export default function HomePage() {
   return (
     <main>
+      <SeoJsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
       <section className="mx-auto grid max-w-6xl gap-8 px-4 pb-14 pt-8 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:pb-20 lg:pt-14">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-clay">
@@ -86,6 +98,27 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <InternalLinks
+        links={[
+          {
+            href: "/zonas/pereira",
+            label: "Vivir en Pereira",
+            description: "Una guia local para orientar la busqueda por ciudad y estilo de vida.",
+          },
+          {
+            href: "/zonas/santa-clara-de-las-villas-pereira",
+            label: "Santa Clara de las Villas",
+            description: "Contexto del sector con enlaces a la propiedad destacada.",
+          },
+          {
+            href: "/guias/comprar-casa-en-pereira",
+            label: "Comprar casa en Pereira",
+            description: "Preguntas utiles antes de solicitar informacion o agendar una visita.",
+          },
+        ]}
+        title="Explora zonas y guias para comprar con mas contexto"
+      />
     </main>
   );
 }
