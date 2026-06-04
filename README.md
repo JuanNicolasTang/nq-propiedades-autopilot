@@ -56,6 +56,11 @@ Para el timeline del CRM, aplicar la migracion
 `public.lead_events` con RLS habilitado y sin politicas publicas. La app la usa
 solo desde server-side con `SUPABASE_SERVICE_ROLE_KEY`.
 
+Para el modulo de visitas, aplicar tambien
+`supabase/migrations/20260604002000_create_showings.sql`, que crea
+`public.showings`, sus indices, estados permitidos y trigger de `updated_at`.
+La agenda se opera desde `/admin/visitas` y desde el detalle de cada lead.
+
 Campos esperados principales:
 
 - `property_slug`
@@ -80,6 +85,25 @@ Tabla `lead_events`:
 - `note`
 - `created_at`
 
+Tabla `showings`:
+
+- `id`
+- `lead_id`
+- `property_slug`
+- `scheduled_at`
+- `status`
+- `notes`
+- `created_at`
+- `updated_at`
+
+Estados permitidos para visitas:
+
+- `programada`
+- `confirmada`
+- `realizada`
+- `cancelada`
+- `no_asistio`
+
 ## Rutas
 
 - `/`: home publica de NQ Propiedades.
@@ -87,6 +111,8 @@ Tabla `lead_events`:
 - `/admin/leads`: estructura inicial del CRM.
 - `/admin/leads/[id]`: detalle operativo del lead con cambio de estado, notas
   internas, timeline y enlace manual de WhatsApp.
+- `/admin/visitas`: agenda protegida de visitas con estado, notas y WhatsApp
+  manual de confirmacion.
 - `/admin/login`: acceso temporal al CRM usando `ADMIN_PASSWORD`.
 - `/api/leads`: endpoint preparado para captura de leads.
 
@@ -127,12 +153,15 @@ Santa Clara de las Villas, Pereira, Risaralda.
    vacio si no hay registros.
 9. Abrir un lead en `/admin/leads/[id]`, cambiar estado y agregar una nota.
 10. Confirmar que el timeline muestra los eventos nuevos.
-11. Ejecutar `npm run lint` y `npm run build`.
+11. Agendar una visita desde `/admin/leads/[id]`.
+12. Confirmar que la visita aparece en `/admin/visitas`.
+13. Cambiar el estado de la visita y confirmar que el timeline registra el cambio.
+14. Validar que los botones de WhatsApp solo abren mensajes manuales precargados.
+15. Ejecutar `npm run lint` y `npm run build`.
 
 ## Pendiente para siguientes fases
 
 - Supabase Auth para proteger `/admin`.
 - Persistencia real de leads en Supabase.
 - Lead scoring editable desde CRM.
-- Agenda de visitas.
 - Integraciones con WhatsApp Cloud API, Meta Lead Ads y reportes.
