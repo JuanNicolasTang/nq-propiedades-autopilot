@@ -12,6 +12,7 @@ leads, preparacion de Supabase y estructura inicial de CRM.
 - Supabase preparado para persistencia futura de leads
 - WhatsApp deep link con mensaje precargado
 - Base SEO/GEO/AEO con sitemap, robots, metadata, canonical y JSON-LD seguro
+- Kit comercial de propiedad con galeria segura, admin y ficha PDF protegida
 
 ## Ejecutar localmente
 
@@ -161,6 +162,8 @@ Metodos de pago permitidos:
 - `/guias/comprar-casa-en-conjunto-cerrado-pereira`: guia AEO/FAQ para casas en
   conjunto cerrado.
 - `/admin`: dashboard protegido con metricas de embudo comercial.
+- `/admin/propiedades`: panel protegido de propiedad, activos publicos,
+  auditoria visual y descarga de ficha comercial.
 - `/admin/leads`: estructura inicial del CRM.
 - `/admin/leads/[id]`: detalle operativo del lead con cambio de estado, notas
   internas, timeline y enlace manual de WhatsApp.
@@ -170,9 +173,45 @@ Metodos de pago permitidos:
   condiciones, metodo de pago y WhatsApp manual.
 - `/admin/login`: acceso temporal al CRM usando `ADMIN_PASSWORD`.
 - `/api/leads`: endpoint preparado para captura de leads.
+- `/api/admin/properties/santa-clara-de-las-villas/pdf`: descarga protegida
+  de ficha comercial PDF para uso interno.
 - `/sitemap.xml`: sitemap publico generado por Next.js.
 - `/robots.txt`: reglas publicas que permiten paginas comerciales y bloquean
   `/admin` y `/api`.
+
+## Imagenes y kit comercial
+
+Las fotos reales de la propiedad deben guardarse en:
+
+```text
+public/images/properties/santa-clara-de-las-villas/
+```
+
+Antes de publicar una imagen:
+
+- Revisar visualmente que no muestre documentos, escrituras, avaluos o papeles
+  legales.
+- Excluir imagenes con direccion exacta, placas de vehiculos, personas
+  identificables, numeros especificos que revelen ubicacion o datos privados.
+- Convertir a `.webp` cuando sea posible.
+- Optimizar peso para web.
+- Eliminar EXIF/GPS. Las imagenes procesadas por `sharp` sin `withMetadata()`
+  quedan sin metadatos heredados.
+- Usar nombres limpios, por ejemplo `sala.webp`, `cocina.webp`,
+  `zonas-comunes.webp`.
+
+Auditoria actual: se revisaron 14 imagenes candidatas de WhatsApp y se
+excluyeron todas porque mostraban documentos, avaluos, mapas, valores, datos
+juridicos o informacion privada. Por eso la landing mantiene una galeria segura
+en estado pendiente y el Open Graph usa una imagen comercial no fotografica sin
+datos sensibles.
+
+La ficha comercial se descarga desde `/admin/propiedades` o desde el detalle de
+un lead. El PDF incluye solo datos publicos permitidos y el aviso:
+
+```text
+Documento comercial. Informacion sujeta a verificacion documental.
+```
 
 ## SEO, GEO y AEO
 
@@ -257,7 +296,13 @@ Santa Clara de las Villas, Pereira, Risaralda.
 18. Validar que los botones de WhatsApp solo abren mensajes manuales precargados.
 19. Abrir `/admin` y confirmar metricas de leads, visitas, ofertas, conversiones,
     proximas visitas y ultimos leads.
-20. Ejecutar `npm run lint` y `npm run build`.
+20. Abrir `/admin/propiedades` sin sesion y confirmar redireccion a login.
+21. Entrar a `/admin/propiedades`, revisar auditoria visual y descargar ficha PDF.
+22. Abrir un lead en `/admin/leads/[id]` y validar botones de ficha comercial y
+    WhatsApp manual para ficha.
+23. Confirmar que `/propiedades/santa-clara-de-las-villas` muestra galeria segura
+    en estado pendiente si no hay fotos aprobadas.
+24. Ejecutar `npm run lint` y `npm run build`.
 
 ## Pendiente para siguientes fases
 

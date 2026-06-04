@@ -29,6 +29,12 @@ export function SiteHeader() {
           </Link>
           <Link
             className="whitespace-nowrap rounded-soft px-3 py-2 transition hover:bg-ink/8 hover:text-ink"
+            href="/admin/propiedades"
+          >
+            Propiedades
+          </Link>
+          <Link
+            className="whitespace-nowrap rounded-soft px-3 py-2 transition hover:bg-ink/8 hover:text-ink"
             href="/admin/visitas"
           >
             Visitas
