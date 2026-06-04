@@ -40,14 +40,17 @@ export function absoluteUrl(path = "/") {
 
 export function createPageMetadata({
   description,
+  image,
   path,
   title,
 }: {
   description: string;
+  image?: string | null;
   path: string;
   title: string;
 }): Metadata {
   const url = absoluteUrl(path);
+  const imageUrl = image ? absoluteUrl(image) : null;
 
   return {
     title,
@@ -62,11 +65,22 @@ export function createPageMetadata({
       siteName: siteConfig.name,
       locale: "es_CO",
       type: "website",
+      images: imageUrl
+        ? [
+            {
+              url: imageUrl,
+              width: 1200,
+              height: 630,
+              alt: title,
+            },
+          ]
+        : undefined,
     },
     twitter: {
-      card: "summary",
+      card: imageUrl ? "summary_large_image" : "summary",
       title,
       description,
+      images: imageUrl ? [imageUrl] : undefined,
     },
   };
 }

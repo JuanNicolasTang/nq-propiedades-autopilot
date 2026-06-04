@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   CalendarClock,
   CheckCircle2,
+  Download,
   DollarSign,
   LogOut,
   MessageCircle,
@@ -28,6 +29,8 @@ import {
   type OfferRow,
   type ShowingRow,
 } from "@/lib/crm";
+import { commercialKitWhatsappUrl } from "@/lib/commercial-kit";
+import { featuredProperty } from "@/lib/properties";
 import { createServerSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { leadStatuses, type LeadStatus } from "@/types/leads";
 import { offerStatuses, paymentMethods, type OfferStatus, type PaymentMethod } from "@/types/offers";
@@ -426,6 +429,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
   }
 
   const whatsappUrl = lead ? leadWhatsappUrl(lead) : null;
+  const commercialKitUrl = lead ? commercialKitWhatsappUrl(lead) : null;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
@@ -459,6 +463,24 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
             >
               <MessageCircle aria-hidden="true" size={18} />
               Abrir WhatsApp
+            </a>
+          )}
+          <a
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-soft border border-ink/15 bg-white px-4 py-3 text-sm font-semibold text-ink transition hover:-translate-y-0.5 hover:bg-paper"
+            href={featuredProperty.commercialKitPath}
+          >
+            <Download aria-hidden="true" size={18} />
+            Descargar ficha
+          </a>
+          {commercialKitUrl && (
+            <a
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-soft bg-clay px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-ink"
+              href={commercialKitUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MessageCircle aria-hidden="true" size={18} />
+              WhatsApp ficha
             </a>
           )}
           <form action="/api/admin/logout" method="post">

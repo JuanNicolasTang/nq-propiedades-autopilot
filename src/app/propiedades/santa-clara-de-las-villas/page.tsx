@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FaqSection, type FaqItem } from "@/components/FaqSection";
 import { InternalLinks } from "@/components/InternalLinks";
 import { LeadForm } from "@/components/LeadForm";
+import { PropertyGallery } from "@/components/PropertyGallery";
 import { PropertyVisual } from "@/components/PropertyVisual";
 import { SeoJsonLd } from "@/components/SeoJsonLd";
 import { WhatsAppButton, WhatsAppFallbackNote } from "@/components/WhatsAppButton";
@@ -13,6 +14,7 @@ import { absoluteUrl, createPageMetadata, faqJsonLd } from "@/lib/seo";
 export const metadata: Metadata = createPageMetadata({
   title: `${featuredProperty.title} en Pereira`,
   description: featuredProperty.seoDescription,
+  image: featuredProperty.openGraphImage?.src,
   path: "/propiedades/santa-clara-de-las-villas",
 });
 
@@ -45,6 +47,9 @@ const propertyJsonLd = {
   name: featuredProperty.title,
   description: featuredProperty.seoDescription,
   url: absoluteUrl("/propiedades/santa-clara-de-las-villas"),
+  image: featuredProperty.openGraphImage
+    ? absoluteUrl(featuredProperty.openGraphImage.src)
+    : undefined,
   address: {
     "@type": "PostalAddress",
     addressLocality: "Pereira",
@@ -174,6 +179,8 @@ export default function SantaClaraPropertyPage() {
 
         <LeadForm propertySlug={featuredProperty.slug} propertyTitle={featuredProperty.title} />
       </section>
+
+      <PropertyGallery property={featuredProperty} />
 
       <FaqSection
         faqs={propertyFaqs}
