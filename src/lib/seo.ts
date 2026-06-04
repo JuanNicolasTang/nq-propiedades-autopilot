@@ -1,8 +1,22 @@
 import type { Metadata, MetadataRoute } from "next";
 
+const PRODUCTION_SITE_URL = "https://condominiospereira.com";
+
+export function getSiteUrl() {
+  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const siteUrl = configuredUrl || PRODUCTION_SITE_URL;
+  const normalizedUrl = siteUrl.replace(/\/$/, "");
+
+  if (process.env.NODE_ENV === "production" && /localhost|127\.0\.0\.1|\[::1\]/i.test(normalizedUrl)) {
+    return PRODUCTION_SITE_URL;
+  }
+
+  return normalizedUrl || PRODUCTION_SITE_URL;
+}
+
 export const siteConfig = {
   name: "NQ Propiedades",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+  url: getSiteUrl(),
   description:
     "Propiedades en Pereira y el Eje Cafetero con informacion clara, privacidad responsable y contacto iniciado por compradores reales.",
 };
@@ -18,7 +32,7 @@ export const publicRoutes = [
 ];
 
 export function absoluteUrl(path = "/") {
-  const baseUrl = siteConfig.url.replace(/\/$/, "");
+  const baseUrl = getSiteUrl();
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
   return `${baseUrl}${normalizedPath}`;
