@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   CalendarClock,
   CheckCircle2,
+  DollarSign,
   LogOut,
   MessageCircle,
   NotebookPen,
@@ -13,17 +14,23 @@ import {
 } from "lucide-react";
 import {
   formatDate,
+  formatCopAmount,
   leadWhatsappUrl,
+  offerStatusLabel,
+  offerWhatsappUrl,
+  paymentMethodLabel,
   propertyLabel,
   readableBoolean,
   scoreBadge,
   showingWhatsappUrl,
   type LeadEventRow,
   type LeadRow,
+  type OfferRow,
   type ShowingRow,
 } from "@/lib/crm";
 import { createServerSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { leadStatuses, type LeadStatus } from "@/types/leads";
+import { offerStatuses, paymentMethods, type OfferStatus, type PaymentMethod } from "@/types/offers";
 import { showingStatuses, type ShowingStatus } from "@/types/showings";
 
 type LeadDetailPageProps = {
@@ -47,6 +54,28 @@ function isShowingStatus(value: string): value is ShowingStatus {
   return showingStatuses.includes(value as ShowingStatus);
 }
 
+function isOfferStatus(value: string): value is OfferStatus {
+  return offerStatuses.includes(value as OfferStatus);
+}
+
+function isPaymentMethod(value: string): value is PaymentMethod {
+  return paymentMethods.includes(value as PaymentMethod);
+}
+
+function parseOfferAmount(value: string) {
+  const digits = value.replace(/\D/g, "");
+
+  if (!digits) return null;
+
+  const amount = Number(digits);
+
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
+    return null;
+  }
+
+  return amount;
+}
+
 function parseScheduledAt(value: string) {
   if (!value) return null;
 
@@ -65,9 +94,11 @@ async function getLeadDetail(id: string) {
       lead: null,
       events: [] as LeadEventRow[],
       showings: [] as ShowingRow[],
+      offers: [] as OfferRow[],
       error: "Configura SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY para operar el CRM.",
       eventsError: null,
       showingsError: null,
+      offersError: null,
     };
   }
 
@@ -85,9 +116,11 @@ async function getLeadDetail(id: string) {
       lead: null,
       events: [] as LeadEventRow[],
       showings: [] as ShowingRow[],
+      offers: [] as OfferRow[],
       error: "No se pudo cargar el lead desde Supabase.",
       eventsError: null,
       showingsError: null,
+      offersError: null,
     };
   }
 
@@ -96,13 +129,15 @@ async function getLeadDetail(id: string) {
       lead: null,
       events: [] as LeadEventRow[],
       showings: [] as ShowingRow[],
+      offers: [] as OfferRow[],
       error: null,
       eventsError: null,
       showingsError: null,
+      offersError: null,
     };
   }
 
-  const [eventsResponse, showingsResponse] = await Promise.all([
+  const [eventsResponse, showingsResponse, offersResponse] = await Promise.all([
     supabase!
     .from("lead_events")
     .select("id,lead_id,event_type,note,created_at")
@@ -113,18 +148,27 @@ async function getLeadDetail(id: string) {
       .select("id,lead_id,property_slug,scheduled_at,status,notes,created_at,updated_at")
       .eq("lead_id", id)
       .order("scheduled_at", { ascending: false }),
+    supabase!
+      .from("offers")
+      .select("id,lead_id,property_slug,amount,payment_method,conditions,status,created_at,updated_at")
+      .eq("lead_id", id)
+      .order("created_at", { ascending: false }),
   ]);
 
   return {
     lead: lead as LeadRow,
     events: (eventsResponse.data ?? []) as LeadEventRow[],
     showings: (showingsResponse.data ?? []) as ShowingRow[],
+    offers: (offersResponse.data ?? []) as OfferRow[],
     error: null,
     eventsError: eventsResponse.error
       ? "No se pudo cargar el timeline. Revisa que la tabla lead_events exista."
       : null,
     showingsError: showingsResponse.error
       ? "No se pudieron cargar las visitas. Revisa que la tabla showings exista."
+      : null,
+    offersError: offersResponse.error
+      ? "No se pudieron cargar las ofertas. Revisa que la tabla offers exista."
       : null,
   };
 }
@@ -270,6 +314,93 @@ async function updateShowingStatus(formData: FormData) {
   revalidatePath(`/admin/leads/${leadId}`);
 }
 
+async function createOffer(formData: FormData) {
+  "use server";
+
+  const leadId = cleanText(formData.get("leadId"));
+  const propertySlug = cleanText(formData.get("propertySlug"));
+  const amount = parseOfferAmount(cleanText(formData.get("amount")));
+  const paymentMethodValue = cleanText(formData.get("paymentMethod"));
+  const conditions = cleanText(formData.get("conditions"));
+  const paymentMethod = isPaymentMethod(paymentMethodValue) ? paymentMethodValue : "no_definido";
+
+  if (!leadId || !propertySlug || !amount) {
+    return;
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  if (!supabase) {
+    throw new Error("Supabase no esta configurado.");
+  }
+
+  const { error } = await supabase.from("offers").insert({
+    lead_id: leadId,
+    property_slug: propertySlug,
+    amount,
+    payment_method: paymentMethod,
+    conditions: conditions || null,
+    status: "recibida",
+  });
+
+  if (error) {
+    throw new Error("No se pudo registrar la oferta.");
+  }
+
+  await Promise.all([
+    supabase.from("leads").update({ status: "oferta_recibida" }).eq("id", leadId),
+    supabase.from("lead_events").insert({
+      lead_id: leadId,
+      event_type: "offer_created",
+      note: `Oferta registrada por ${formatCopAmount(amount)} con metodo ${paymentMethodLabel(paymentMethod)}.${conditions ? ` Condiciones: ${conditions}` : ""}`,
+    }),
+  ]);
+
+  revalidatePath("/admin/leads");
+  revalidatePath("/admin/ofertas");
+  revalidatePath(`/admin/leads/${leadId}`);
+}
+
+async function updateOfferStatus(formData: FormData) {
+  "use server";
+
+  const leadId = cleanText(formData.get("leadId"));
+  const offerId = cleanText(formData.get("offerId"));
+  const status = cleanText(formData.get("status"));
+  const currentStatus = cleanText(formData.get("currentStatus"));
+  const amount = Number(cleanText(formData.get("amount")));
+
+  if (!leadId || !offerId || !isOfferStatus(status) || status === currentStatus) {
+    return;
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  if (!supabase) {
+    throw new Error("Supabase no esta configurado.");
+  }
+
+  const { error } = await supabase.from("offers").update({ status }).eq("id", offerId);
+
+  if (error) {
+    throw new Error("No se pudo actualizar la oferta.");
+  }
+
+  await supabase.from("lead_events").insert({
+    lead_id: leadId,
+    event_type: "offer_status_changed",
+    note: `Oferta ${Number.isFinite(amount) ? `por ${formatCopAmount(amount)} ` : ""}actualizada de ${currentStatus || "sin estado"} a ${status}.`,
+  });
+
+  if (status === "aceptada") {
+    await supabase.from("leads").update({ status: "negociacion" }).eq("id", leadId);
+  }
+
+  revalidatePath("/admin/ofertas");
+  revalidatePath("/admin/leads");
+  revalidatePath(`/admin/leads/${leadId}`);
+}
+
 function DetailItem({
   label,
   value,
@@ -287,7 +418,8 @@ function DetailItem({
 
 export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
   const { id } = await params;
-  const { lead, events, showings, error, eventsError, showingsError } = await getLeadDetail(id);
+  const { lead, events, showings, offers, error, eventsError, showingsError, offersError } =
+    await getLeadDetail(id);
 
   if (!lead && !error) {
     notFound();
@@ -429,6 +561,65 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
 
             <section className="rounded-soft border border-ink/10 bg-white p-5">
               <div className="flex items-start gap-3">
+                <DollarSign aria-hidden="true" className="mt-0.5 shrink-0 text-jade" size={20} />
+                <div>
+                  <h2 className="font-semibold text-ink">Registrar oferta</h2>
+                  <p className="mt-1 text-sm leading-6 text-ink/68">
+                    Guarda una propuesta formal del comprador. No registres precio minimo
+                    aceptado ni informacion privada de propietarios.
+                  </p>
+                </div>
+              </div>
+              <form action={createOffer} className="mt-5 grid gap-3">
+                <input name="leadId" type="hidden" value={lead.id} />
+                <input name="propertySlug" type="hidden" value={lead.property_slug} />
+                <label className="grid gap-2 text-sm font-semibold text-ink">
+                  Monto ofrecido
+                  <input
+                    className="min-h-12 rounded-soft border border-ink/15 bg-paper/60 px-3 text-base font-normal outline-none transition focus:border-jade focus:ring-2 focus:ring-jade/20"
+                    name="amount"
+                    type="number"
+                    inputMode="numeric"
+                    min="1"
+                    step="1000000"
+                    placeholder="660000000"
+                    required
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-ink">
+                  Metodo de pago
+                  <select
+                    className="min-h-12 rounded-soft border border-ink/15 bg-paper/60 px-3 text-base font-normal outline-none transition focus:border-jade focus:ring-2 focus:ring-jade/20"
+                    name="paymentMethod"
+                    defaultValue="no_definido"
+                  >
+                    {paymentMethods.map((method) => (
+                      <option key={method} value={method}>
+                        {paymentMethodLabel(method)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-ink">
+                  Condiciones
+                  <textarea
+                    className="min-h-24 rounded-soft border border-ink/15 bg-paper/60 px-3 py-3 text-base font-normal outline-none transition focus:border-jade focus:ring-2 focus:ring-jade/20"
+                    name="conditions"
+                    placeholder="Ej. Sujeto a aprobacion de credito y revision de documentos permitidos."
+                  />
+                </label>
+                <button
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-soft bg-night px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-ink"
+                  type="submit"
+                >
+                  <DollarSign aria-hidden="true" size={18} />
+                  Registrar oferta
+                </button>
+              </form>
+            </section>
+
+            <section className="rounded-soft border border-ink/10 bg-white p-5">
+              <div className="flex items-start gap-3">
                 <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0 text-jade" size={20} />
                 <div>
                   <h2 className="font-semibold text-ink">Cambiar estado</h2>
@@ -496,6 +687,102 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
             </section>
           </aside>
         </div>
+      )}
+
+      {lead && (
+        <section className="mb-8 rounded-soft border border-ink/10 bg-white">
+          <div className="flex items-start gap-3 border-b border-ink/10 bg-paper p-4">
+            <DollarSign aria-hidden="true" className="mt-0.5 shrink-0 text-jade" size={20} />
+            <div>
+              <h2 className="font-semibold text-ink">Ofertas del lead</h2>
+              <p className="mt-1 text-sm leading-6 text-ink/68">
+                Propuestas y negociacion asociadas a este comprador. WhatsApp se abre
+                solo por accion manual.
+              </p>
+            </div>
+          </div>
+
+          {offersError && (
+            <div className="border-b border-ink/10 bg-red-50 p-4 text-sm font-semibold text-red-700">
+              {offersError}
+            </div>
+          )}
+
+          {offers.length === 0 ? (
+            <div className="p-6 text-sm leading-6 text-ink/68">
+              Todavia no hay ofertas registradas para este lead.
+            </div>
+          ) : (
+            <div className="grid gap-3 p-4">
+              {offers.map((offer) => {
+                const offerWhatsAppUrl = offerWhatsappUrl(offer, lead);
+
+                return (
+                  <article
+                    className="grid gap-4 rounded-soft border border-ink/10 bg-paper p-4 lg:grid-cols-[1fr_16rem]"
+                    key={offer.id}
+                  >
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-moss">
+                        {offerStatusLabel(offer.status)}
+                      </p>
+                      <h3 className="mt-2 text-2xl font-semibold text-ink">
+                        {formatCopAmount(offer.amount)}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-ink/68">
+                        Metodo: {paymentMethodLabel(offer.payment_method)}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-ink/68">
+                        {offer.conditions || "Sin condiciones registradas"}
+                      </p>
+                      <p className="mt-2 text-xs font-semibold text-ink/56">
+                        {formatDate(offer.created_at)}
+                      </p>
+                      {offerWhatsAppUrl && (
+                        <a
+                          className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-soft bg-jade px-3 py-2 text-sm font-semibold text-white transition hover:bg-moss"
+                          href={offerWhatsAppUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <MessageCircle aria-hidden="true" size={16} />
+                          WhatsApp manual
+                        </a>
+                      )}
+                    </div>
+                    <form action={updateOfferStatus} className="grid content-start gap-3">
+                      <input name="leadId" type="hidden" value={lead.id} />
+                      <input name="offerId" type="hidden" value={offer.id} />
+                      <input name="currentStatus" type="hidden" value={offer.status} />
+                      <input name="amount" type="hidden" value={offer.amount} />
+                      <label className="grid gap-2 text-sm font-semibold text-ink">
+                        Estado oferta
+                        <select
+                          className="min-h-11 rounded-soft border border-ink/15 bg-white px-3 text-base font-normal outline-none transition focus:border-jade focus:ring-2 focus:ring-jade/20"
+                          name="status"
+                          defaultValue={offer.status}
+                        >
+                          {offerStatuses.map((status) => (
+                            <option key={status} value={status}>
+                              {offerStatusLabel(status)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-soft bg-night px-4 py-2 text-sm font-semibold text-white transition hover:bg-ink"
+                        type="submit"
+                      >
+                        <CheckCircle2 aria-hidden="true" size={16} />
+                        Actualizar oferta
+                      </button>
+                    </form>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
       )}
 
       {lead && (

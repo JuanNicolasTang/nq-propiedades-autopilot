@@ -61,6 +61,12 @@ Para el modulo de visitas, aplicar tambien
 `public.showings`, sus indices, estados permitidos y trigger de `updated_at`.
 La agenda se opera desde `/admin/visitas` y desde el detalle de cada lead.
 
+Para el modulo de ofertas y negociacion, aplicar
+`supabase/migrations/20260604194000_create_offers.sql`, que crea
+`public.offers`, sus indices, estados permitidos, metodos de pago permitidos y
+trigger de `updated_at`. No se deben guardar ni mostrar valores privados de
+negociacion.
+
 Campos esperados principales:
 
 - `property_slug`
@@ -104,6 +110,34 @@ Estados permitidos para visitas:
 - `cancelada`
 - `no_asistio`
 
+Tabla `offers`:
+
+- `id`
+- `lead_id`
+- `property_slug`
+- `amount`
+- `payment_method`
+- `conditions`
+- `status`
+- `created_at`
+- `updated_at`
+
+Estados permitidos para ofertas:
+
+- `recibida`
+- `en_revision`
+- `contraoferta`
+- `aceptada`
+- `rechazada`
+- `retirada`
+
+Metodos de pago permitidos:
+
+- `contado`
+- `credito`
+- `mixto`
+- `no_definido`
+
 ## Rutas
 
 - `/`: home publica de NQ Propiedades.
@@ -113,6 +147,8 @@ Estados permitidos para visitas:
   internas, timeline y enlace manual de WhatsApp.
 - `/admin/visitas`: agenda protegida de visitas con estado, notas y WhatsApp
   manual de confirmacion.
+- `/admin/ofertas`: panel protegido de ofertas y negociacion con estado,
+  condiciones, metodo de pago y WhatsApp manual.
 - `/admin/login`: acceso temporal al CRM usando `ADMIN_PASSWORD`.
 - `/api/leads`: endpoint preparado para captura de leads.
 
@@ -130,8 +166,7 @@ por Supabase Auth y politicas de acceso por usuario.
 La web publica usa solo ubicacion aproximada y datos comerciales permitidos.
 No se deben publicar datos sensibles de la propiedad ni de propietarios,
 incluyendo identificadores registrales, datos catastrales, documentos legales,
-firmas, coordenadas exactas, avaluos completos, precio minimo aceptado o
-informacion privada.
+firmas, coordenadas exactas, avaluos completos o informacion privada.
 
 Ubicacion publica permitida para la primera propiedad:
 
@@ -156,8 +191,12 @@ Santa Clara de las Villas, Pereira, Risaralda.
 11. Agendar una visita desde `/admin/leads/[id]`.
 12. Confirmar que la visita aparece en `/admin/visitas`.
 13. Cambiar el estado de la visita y confirmar que el timeline registra el cambio.
-14. Validar que los botones de WhatsApp solo abren mensajes manuales precargados.
-15. Ejecutar `npm run lint` y `npm run build`.
+14. Registrar una oferta desde `/admin/leads/[id]`.
+15. Confirmar que la oferta aparece en `/admin/ofertas`.
+16. Cambiar el estado de la oferta y confirmar que el timeline registra el cambio.
+17. Validar que no se muestran valores privados de negociacion.
+18. Validar que los botones de WhatsApp solo abren mensajes manuales precargados.
+19. Ejecutar `npm run lint` y `npm run build`.
 
 ## Pendiente para siguientes fases
 
