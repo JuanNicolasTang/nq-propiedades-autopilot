@@ -31,8 +31,31 @@ export type Property = {
   galleryImages: PropertyImage[];
   openGraphImage: PropertyImage | null;
   commercialKitPath: string;
+  youtubeVideoUrl: string | null;
+  youtubeEmbedUrl: string | null;
   imagePrivacyAudit: PropertyImagePrivacyAudit;
 };
+
+const santaClaraImageBase = "/images/properties/santa-clara-de-las-villas";
+
+const santaClaraAltTexts = [
+  "Interior de casa en conjunto cerrado en Pereira",
+  "Espacio social de casa en Santa Clara de las Villas",
+  "Zona interior iluminada de casa en Pereira",
+  "Terraza cubierta en casa de conjunto cerrado",
+  "Ambiente interior de casa en Pereira",
+  "Espacio amplio en casa de conjunto cerrado",
+  "Zona privada iluminada de casa en Pereira",
+  "Interior con luz natural en casa de Pereira",
+  "Espacio funcional de casa en conjunto cerrado",
+  "Circulacion interior de casa en Pereira",
+  "Ambiente social interior de casa en Pereira",
+];
+
+const santaClaraGalleryImages = santaClaraAltTexts.map((altText, index) => ({
+  src: `${santaClaraImageBase}/galeria-${String(index + 1).padStart(2, "0")}.webp`,
+  altText,
+}));
 
 export const properties: Property[] = [
   {
@@ -64,38 +87,21 @@ export const properties: Property[] = [
     ],
     seoDescription:
       "Casa de tres niveles en Santa Clara de las Villas, Pereira, con area aproximada de 155.66 m2, estrato 5 y zonas sociales en conjunto cerrado.",
-    heroImage: null,
-    galleryImages: [],
+    heroImage: santaClaraGalleryImages[0],
+    galleryImages: santaClaraGalleryImages,
     openGraphImage: {
-      src: "/images/properties/santa-clara-de-las-villas/og-comercial-seguro.webp",
-      altText:
-        "Imagen comercial segura de NQ Propiedades para casa en Santa Clara de las Villas, Pereira",
-      caption: "Imagen comercial segura sin direccion exacta ni datos privados.",
+      src: `${santaClaraImageBase}/galeria-01.webp`,
+      altText: "Interior de casa en conjunto cerrado en Pereira",
     },
     commercialKitPath: "/api/admin/properties/santa-clara-de-las-villas/pdf",
+    youtubeVideoUrl: "https://youtu.be/W2I0LfH1x6Y?si=RHtf3X8qu_Ci3KVb",
+    youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/W2I0LfH1x6Y",
     imagePrivacyAudit: {
-      reviewed: 14,
-      approved: 0,
-      excluded: [
-        {
-          label: "WhatsApp Image 2026-06-03 at 10.56.27 AM.jpeg",
-          reason: "Documento de avaluo con valores, descripcion tecnica y datos privados.",
-        },
-        {
-          label: "WhatsApp Image 2026-06-03 at 10.56.28 AM.jpeg y variantes",
-          reason: "Mapas, localizacion, reglamentacion y documentos con informacion sensible.",
-        },
-        {
-          label: "WhatsApp Image 2026-06-03 at 10.56.29 AM.jpeg y variantes",
-          reason: "Caracteristicas de construccion, acabados, tablas y contenido documental privado.",
-        },
-        {
-          label: "WhatsApp Image 2026-06-03 at 10.56.30 AM.jpeg y variantes",
-          reason: "Valor total de avaluo, clausulas, identificacion geografica y datos juridicos.",
-        },
-      ],
+      reviewed: 11,
+      approved: 11,
+      excluded: [],
       note:
-        "No se aprobaron fotos reales para publicacion. La galeria queda preparada para imagenes futuras auditadas y optimizadas.",
+        "Las imagenes del ZIP santa_clara_selected_webp.zip fueron aprobadas visualmente y renombradas de forma neutra.",
     },
   },
 ];

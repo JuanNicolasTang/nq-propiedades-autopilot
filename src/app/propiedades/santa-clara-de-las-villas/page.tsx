@@ -5,6 +5,7 @@ import { FaqSection, type FaqItem } from "@/components/FaqSection";
 import { InternalLinks } from "@/components/InternalLinks";
 import { LeadForm } from "@/components/LeadForm";
 import { PropertyGallery } from "@/components/PropertyGallery";
+import { PropertyVideo } from "@/components/PropertyVideo";
 import { PropertyVisual } from "@/components/PropertyVisual";
 import { SeoJsonLd } from "@/components/SeoJsonLd";
 import { WhatsAppButton, WhatsAppFallbackNote } from "@/components/WhatsAppButton";
@@ -181,6 +182,7 @@ export default function SantaClaraPropertyPage() {
       </section>
 
       <PropertyGallery property={featuredProperty} />
+      <PropertyVideo property={featuredProperty} />
 
       <FaqSection
         faqs={propertyFaqs}
