@@ -197,17 +197,21 @@ Antes de publicar una imagen:
 - Optimizar peso para web.
 - Eliminar EXIF/GPS. Las imagenes procesadas por `sharp` sin `withMetadata()`
   quedan sin metadatos heredados.
-- Usar nombres limpios, por ejemplo `sala.webp`, `cocina.webp`,
-  `zonas-comunes.webp`.
+- Usar nombres limpios y neutros, por ejemplo `galeria-01.webp`,
+  `galeria-02.webp`, `galeria-03.webp`.
 
-Auditoria actual: se revisaron 14 imagenes candidatas de WhatsApp y se
-excluyeron todas porque mostraban documentos, avaluos, mapas, valores, datos
-juridicos o informacion privada. Por eso la landing mantiene una galeria segura
-en estado pendiente y el Open Graph usa una imagen comercial no fotografica sin
-datos sensibles.
+Auditoria actual: se revisaron 11 imagenes del ZIP
+`santa_clara_selected_webp.zip` y se aprobaron todas para uso publico. Se
+renombraron con nombres neutros `galeria-01.webp`, `galeria-02.webp`, etc.,
+sin clasificar por cocina, habitacion, bano u otros espacios especificos. Las
+imagenes procesadas no tienen EXIF/GPS.
+
+La landing tambien incluye una seccion "Recorrido en video" con embed responsive
+de YouTube usando `youtube-nocookie.com`.
 
 La ficha comercial se descarga desde `/admin/propiedades` o desde el detalle de
-un lead. El PDF incluye solo datos publicos permitidos y el aviso:
+un lead. El PDF incluye pocas imagenes seleccionadas con nombres neutros, solo
+datos publicos permitidos y el aviso:
 
 ```text
 Documento comercial. Informacion sujeta a verificacion documental.
@@ -300,8 +304,8 @@ Santa Clara de las Villas, Pereira, Risaralda.
 21. Entrar a `/admin/propiedades`, revisar auditoria visual y descargar ficha PDF.
 22. Abrir un lead en `/admin/leads/[id]` y validar botones de ficha comercial y
     WhatsApp manual para ficha.
-23. Confirmar que `/propiedades/santa-clara-de-las-villas` muestra galeria segura
-    en estado pendiente si no hay fotos aprobadas.
+23. Confirmar que `/propiedades/santa-clara-de-las-villas` muestra galeria real
+    con nombres neutros y la seccion "Recorrido en video".
 24. Ejecutar `npm run lint` y `npm run build`.
 
 ## Pendiente para siguientes fases
