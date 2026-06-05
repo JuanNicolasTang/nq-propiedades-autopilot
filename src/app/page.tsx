@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, MapPin, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Home, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import { InternalLinks } from "@/components/InternalLinks";
-import { PropertyVisual } from "@/components/PropertyVisual";
+import { PropertyHeroImage } from "@/components/PropertyHeroImage";
 import { SeoJsonLd } from "@/components/SeoJsonLd";
 import { WhatsAppButton, WhatsAppFallbackNote } from "@/components/WhatsAppButton";
 import { featuredProperty, formatCop } from "@/lib/properties";
@@ -25,11 +25,11 @@ export default function HomePage() {
             Pereira y Eje Cafetero
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-5xl font-semibold leading-[0.98] text-ink sm:text-6xl lg:text-7xl">
-            NQ Propiedades
+            Casa en conjunto cerrado en Pereira
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-ink/72">
-            Una web inmobiliaria enfocada en compradores reales: informacion clara,
-            privacidad responsable y contacto iniciado por personas interesadas.
+            Conoce una casa de tres niveles en Santa Clara de las Villas con fotos reales,
+            zonas sociales completas y contacto directo para compradores interesados.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link
@@ -43,19 +43,27 @@ export default function HomePage() {
           </div>
           <WhatsAppFallbackNote />
         </div>
-        <PropertyVisual />
+        <PropertyHeroImage property={featuredProperty} />
       </section>
 
       <section className="border-y border-ink/10 bg-white">
-        <div className="mx-auto grid max-w-6xl gap-5 px-4 py-8 sm:grid-cols-3 sm:px-6">
+        <div className="mx-auto grid max-w-6xl gap-5 px-4 py-8 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
           {[
-            ["Propiedad inicial", featuredProperty.shortTitle],
-            ["Precio sugerido", formatCop(featuredProperty.priceCop)],
-            ["Ubicacion publica", featuredProperty.location],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-soft border border-ink/10 bg-paper p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-moss">{label}</p>
-              <p className="mt-2 text-lg font-semibold text-ink">{value}</p>
+            { icon: Home, label: "Tipo", value: featuredProperty.type },
+            { icon: Sparkles, label: "Area aprox.", value: `${featuredProperty.areaM2} m2` },
+            {
+              icon: ShieldCheck,
+              label: "Precio publicado",
+              value: formatCop(featuredProperty.priceCop),
+            },
+            { icon: MapPin, label: "Ubicacion publica", value: featuredProperty.location },
+          ].map((item) => (
+            <div key={item.label} className="rounded-soft border border-ink/10 bg-paper p-4">
+              <item.icon aria-hidden="true" className="text-jade" size={20} />
+              <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-moss">
+                {item.label}
+              </p>
+              <p className="mt-2 text-lg font-semibold text-ink">{item.value}</p>
             </div>
           ))}
         </div>
@@ -65,10 +73,10 @@ export default function HomePage() {
         <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-clay">
-              Fase 1
+              Compra informada
             </p>
             <h2 className="mt-3 font-serif text-4xl font-semibold leading-tight text-ink">
-              Captacion sin atajos ni datos sensibles.
+              Lo importante esta claro desde el primer contacto.
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">

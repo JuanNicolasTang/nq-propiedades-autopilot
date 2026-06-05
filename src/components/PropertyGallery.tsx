@@ -8,7 +8,7 @@ export function PropertyGallery({ property }: { property: Property }) {
   const secondaryImages = images.filter((image) => image.src !== heroImage?.src);
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
+    <section id="galeria" className="mx-auto max-w-6xl scroll-mt-28 px-4 py-14 sm:px-6 lg:py-20">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-clay">
