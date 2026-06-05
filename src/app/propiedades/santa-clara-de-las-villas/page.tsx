@@ -5,8 +5,8 @@ import { FaqSection, type FaqItem } from "@/components/FaqSection";
 import { InternalLinks } from "@/components/InternalLinks";
 import { LeadForm } from "@/components/LeadForm";
 import { PropertyGallery } from "@/components/PropertyGallery";
+import { PropertyHeroImage } from "@/components/PropertyHeroImage";
 import { PropertyVideo } from "@/components/PropertyVideo";
-import { PropertyVisual } from "@/components/PropertyVisual";
 import { SeoJsonLd } from "@/components/SeoJsonLd";
 import { WhatsAppButton, WhatsAppFallbackNote } from "@/components/WhatsAppButton";
 import { featuredProperty, formatCop } from "@/lib/properties";
@@ -79,7 +79,7 @@ export default function SantaClaraPropertyPage() {
   return (
     <main>
       <SeoJsonLd data={[propertyJsonLd, faqJsonLd(propertyFaqs)]} />
-      <section className="mx-auto grid max-w-6xl gap-8 px-4 pb-12 pt-6 sm:px-6 lg:grid-cols-[0.98fr_1.02fr] lg:items-center lg:pb-16 lg:pt-10">
+      <section className="mx-auto grid max-w-6xl gap-8 px-4 pb-10 pt-6 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:pb-14 lg:pt-10">
         <div>
           <Link
             className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-ink/70 transition hover:text-ink"
@@ -89,7 +89,7 @@ export default function SantaClaraPropertyPage() {
             Volver
           </Link>
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-clay">
-            Propiedad destacada
+            Casa disponible en Pereira
           </p>
           <h1 className="mt-4 font-serif text-4xl font-semibold leading-[1.03] text-ink sm:text-6xl">
             {featuredProperty.title}
@@ -97,18 +97,30 @@ export default function SantaClaraPropertyPage() {
           <p className="mt-5 max-w-2xl text-lg leading-8 text-ink/72">
             {featuredProperty.summary}
           </p>
+          <div className="mt-6 grid max-w-xl gap-3 sm:grid-cols-3">
+            {[
+              ["Precio", formatCop(featuredProperty.priceCop)],
+              ["Area", `${featuredProperty.areaM2} m2 aprox.`],
+              ["Estrato", `${featuredProperty.strata}`],
+            ].map(([label, value]) => (
+              <div className="rounded-soft border border-ink/10 bg-white p-3" key={label}>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-moss">{label}</p>
+                <p className="mt-1 text-sm font-semibold text-ink">{value}</p>
+              </div>
+            ))}
+          </div>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <a
               className="inline-flex min-h-12 items-center justify-center rounded-soft bg-night px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-ink focus:outline-none focus:ring-2 focus:ring-night focus:ring-offset-2"
               href="#lead-form"
             >
-              Solicitar informacion
+              Solicitar visita o informacion
             </a>
             <WhatsAppButton property={featuredProperty} />
           </div>
           <WhatsAppFallbackNote />
         </div>
-        <PropertyVisual />
+        <PropertyHeroImage property={featuredProperty} />
       </section>
 
       <section className="border-y border-ink/10 bg-white">
@@ -129,6 +141,9 @@ export default function SantaClaraPropertyPage() {
           ))}
         </div>
       </section>
+
+      <PropertyGallery property={featuredProperty} />
+      <PropertyVideo property={featuredProperty} />
 
       <section className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
         <div className="space-y-8">
@@ -180,9 +195,6 @@ export default function SantaClaraPropertyPage() {
 
         <LeadForm propertySlug={featuredProperty.slug} propertyTitle={featuredProperty.title} />
       </section>
-
-      <PropertyGallery property={featuredProperty} />
-      <PropertyVideo property={featuredProperty} />
 
       <FaqSection
         faqs={propertyFaqs}

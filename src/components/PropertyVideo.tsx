@@ -5,7 +5,7 @@ export function PropertyVideo({ property }: { property: Property }) {
   if (!property.youtubeEmbedUrl) return null;
 
   return (
-    <section className="border-y border-ink/10 bg-white">
+    <section id="video" className="scroll-mt-28 border-y border-ink/10 bg-white">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
         <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
           <div>

@@ -79,10 +79,13 @@ export function LeadForm({ propertySlug, propertyTitle }: LeadFormProps) {
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-clay">
           Solicitud con permiso
         </p>
-        <h2 className="mt-2 text-2xl font-semibold text-ink">Quiero conocer esta casa</h2>
+        <h2 className="mt-2 text-2xl font-semibold text-ink">
+          Agenda una visita o pide la ficha
+        </h2>
         <p className="mt-2 text-sm leading-6 text-ink/68">
-          Dejanos tus datos para responder sobre {propertyTitle}. No enviamos mensajes
-          masivos ni compartimos tu informacion.
+          Dejanos tus datos para responder sobre {propertyTitle}. La respuesta es manual,
+          puntual y basada en tu autorizacion; no enviamos mensajes masivos ni compartimos
+          tu informacion.
         </p>
       </div>
 
@@ -245,6 +248,9 @@ export function LeadForm({ propertySlug, propertyTitle }: LeadFormProps) {
         <Send aria-hidden="true" size={18} />
         {state === "submitting" ? "Enviando..." : "Enviar solicitud"}
       </button>
+      <p className="mt-3 text-center text-xs leading-5 text-ink/58">
+        Tambien puedes iniciar la conversacion manualmente desde el boton de WhatsApp.
+      </p>
     </form>
   );
 }
